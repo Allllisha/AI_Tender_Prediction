@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: bid-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: bid_kacho_db
+      POSTGRES_USER: bid_user
+      POSTGRES_PASSWORD: bid_password_2024
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bid_user -d bid_kacho_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bid-network
+
+  backend:
+    build: ./backend
+    container_name: bid-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - PYTHONUNBUFFERED=1
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
+      - AZURE_OPENAI_DEPLOYMENT_NAME=${AZURE_OPENAI_DEPLOYMENT_NAME}
+      - DATABASE_URL=postgresql://bid_user:bid_password_2024@postgres:5432/bid_kacho_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bid-network
+
+  frontend:
+    build: ./frontend
+    container_name: bid-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+      - WDS_SOCKET_HOST=127.0.0.1
+      - WATCHPACK_POLLING=true
+    depends_on:
+      - backend
+    networks:
+      - bid-network
+    stdin_open: true
+    tty: true
+
+networks:
+  bid-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
