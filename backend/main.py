@@ -6,9 +6,12 @@ import uvicorn
 from sqlalchemy.orm import Session
 import os
 from dotenv import load_dotenv
+# import pandas as pd  # Not used
 
-# 環境変数の読み込み
-load_dotenv()
+# 環境変数の読み込み（ローカル開発時のみ）
+# Docker/App Serviceでは環境変数が直接設定されるため不要
+if os.path.exists('.env'):
+    load_dotenv()
 
 # データベース関連
 from database import engine
@@ -29,6 +32,12 @@ from routers import auth_router, csv_upload_router, company_router
 # テーブル作成はスキップ（既にPostgreSQLで1_init.sqlで作成済み）
 # db_models.Base.metadata.create_all(bind=engine)
 
+# デモユーザーの自動作成は本番環境では無効化
+# def create_demo_user_on_startup():
+#     """アプリケーション起動時にデモユーザーを作成"""
+#     # 本番環境では手動でユーザーを作成してください
+#     pass
+
 app = FastAPI(
     title="建築入札インテリジェンス・システム",
     description="AI駆動型入札分析システム",
@@ -37,7 +46,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"],
+    allow_origins=["*"],  # すべてのオリジンを許可
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -104,7 +113,15 @@ def read_root():
         ]
     }
 
-@app.get("/tenders/search", response_model=List[TenderInfo])
+@app.get("/filters/options")
+def get_filter_options():
+    """フィルタオプションを取得"""
+    try:
+        return data_loader.get_filter_options()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/tenders/search")
 def search_tenders(
     prefecture: Optional[str] = None,
     municipality: Optional[str] = None,
@@ -113,22 +130,53 @@ def search_tenders(
     max_price: Optional[int] = None,
     bid_method: Optional[str] = None
 ):
-    filters = {}
-    if prefecture:
-        filters['prefecture'] = prefecture
-    if municipality:
-        filters['municipality'] = municipality
-    if use_type:
-        filters['use_type'] = use_type
-    if min_price:
-        filters['min_price'] = min_price
-    if max_price:
-        filters['max_price'] = max_price
-    if bid_method:
-        filters['bid_method'] = bid_method
+    try:
+        filters = {}
+        if prefecture:
+            filters['prefecture'] = prefecture
+        if municipality:
+            filters['municipality'] = municipality
+        if use_type:
+            filters['use_type'] = use_type
+        if min_price:
+            filters['min_price'] = min_price
+        if max_price:
+            filters['max_price'] = max_price
+        if bid_method:
+            filters['bid_method'] = bid_method
+            
+        results = data_loader.search_tenders(filters)
         
-    results = data_loader.search_tenders(**filters)
-    return results
+        # 既に辞書のリストが返ってくるので、そのまま返す
+        if not results:
+            return []
+        
+        # 日付フォーマットの処理
+        for result in results:
+            # 日付型を文字列に変換
+            if result.get('bid_date'):
+                result['bid_date'] = result['bid_date'].strftime('%Y-%m-%d') if result['bid_date'] else ''
+            if result.get('notice_date'):
+                result['notice_date'] = result['notice_date'].strftime('%Y-%m-%d') if result['notice_date'] else ''
+            
+            # Noneをデフォルト値に変換
+            result['floor_area_m2'] = result.get('floor_area_m2') or 0
+            result['estimated_price'] = result.get('estimated_price') or 0
+            result['minimum_price'] = result.get('minimum_price') or 0
+            result['jv_allowed'] = result.get('jv_allowed') or False
+            
+            # 文字列のNoneを空文字に
+            for key in ['tender_id', 'title', 'publisher', 'prefecture', 'municipality', 
+                       'address_text', 'use_type', 'bid_method', 'origin_url']:
+                if key in result and result[key] is None:
+                    result[key] = ''
+        
+        return results
+    except Exception as e:
+        print(f"Error in search_tenders: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/tenders/{tender_id}", response_model=TenderInfo)
 def get_tender(tender_id: str):
@@ -140,20 +188,29 @@ def get_tender(tender_id: str):
 @app.post("/predict", response_model=PredictionResponse)
 def predict_single(request: PredictionRequest):
     try:
+        print(f"Predict request: tender_id={request.tender_id}, bid_amount={request.bid_amount}, company_name={request.company_name}")
         result = predictor.predict_single(
             request.tender_id,
             request.bid_amount,
             request.company_name
         )
+        print(f"Predict result: {result}")
         return result
     except ValueError as e:
+        print(f"ValueError in predict: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
+        print(f"Error in predict: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/predict-bulk", response_model=List[PredictionResponse])
 def predict_bulk(request: BulkPredictionRequest):
     try:
+        print(f"Bulk prediction request: {request}")
         search_params = {}
         if request.prefecture:
             search_params['prefecture'] = request.prefecture
@@ -170,8 +227,12 @@ def predict_bulk(request: BulkPredictionRequest):
             min_price=request.min_price,
             max_price=request.max_price
         )
+        print(f"Bulk prediction results: {len(results) if results else 0} items")
         return results
     except Exception as e:
+        print(f"Error in predict_bulk: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/company/strengths")
@@ -184,41 +245,6 @@ def get_company_strengths(company_name: Optional[str] = None):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/filters/options")
-def get_filter_options():
-    prefectures = set()
-    municipalities = set()
-    use_types = set()
-    bid_methods = set()
-    
-    # 都道府県ごとの市区町村を格納
-    prefecture_municipalities = {}
-    
-    for tender in data_loader.tender_data:
-        prefecture = tender['prefecture']
-        municipality = tender['municipality']
-        
-        prefectures.add(prefecture)
-        municipalities.add(municipality)
-        use_types.add(tender['use_type'])
-        bid_methods.add(tender['bid_method'])
-        
-        # 都道府県ごとに市区町村を分類
-        if prefecture not in prefecture_municipalities:
-            prefecture_municipalities[prefecture] = set()
-        prefecture_municipalities[prefecture].add(municipality)
-    
-    # 都道府県ごとの市区町村リストをソート
-    for prefecture in prefecture_municipalities:
-        prefecture_municipalities[prefecture] = sorted(list(prefecture_municipalities[prefecture]))
-    
-    return {
-        "prefectures": sorted(list(prefectures)),
-        "municipalities": sorted(list(municipalities)),
-        "use_types": sorted(list(use_types)),
-        "bid_methods": sorted(list(bid_methods)),
-        "prefecture_municipalities": prefecture_municipalities
-    }
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

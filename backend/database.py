@@ -6,11 +6,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# データベースURL（環境変数から取得、デフォルト値あり）
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://bid_user:bid_password_2024@postgres:5432/bid_kacho_db"
-)
+# データベースURL（環境変数から取得）
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is required")
 
 # SQLAlchemyエンジンの作成
 engine = create_engine(DATABASE_URL)

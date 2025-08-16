@@ -6,9 +6,13 @@ import {
   Box,
   Typography,
   Tooltip,
+  Alert,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
+import WarningIcon from '@mui/icons-material/Warning';
+import ErrorIcon from '@mui/icons-material/Error';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 function PriceInput({ 
   label, 
@@ -69,9 +73,8 @@ function PriceInput({
     
     const numValue = parseNumber(input);
     if (numValue !== '' && !isNaN(numValue)) {
-      if ((min !== undefined && numValue < min) || (max !== undefined && numValue > max)) {
-        return;
-      }
+      // 入力中は範囲チェックせずに値をそのまま反映
+      // 範囲チェックはhandleBlur（フォーカスが外れた時）で行う
       onChange({ target: { value: numValue } });
     } else if (input === '') {
       onChange({ target: { value: '' } });
@@ -99,6 +102,8 @@ function PriceInput({
 
   const handleBlur = () => {
     setIsFocused(false);
+    // フォーカスが外れた時は値をフォーマットして表示するだけ
+    // 範囲チェックは行わない（警告表示は別途行う）
     setDisplayValue(formatNumber(value));
   };
 
@@ -111,6 +116,45 @@ function PriceInput({
       handleDecrement();
     }
   };
+
+  // 価格の状態を判定
+  const getPriceStatus = () => {
+    if (!value || value === '') return null;
+    
+    if (min !== undefined && value < min) {
+      return {
+        severity: 'error',
+        icon: <ErrorIcon />,
+        message: '失格リスク：最低制限価格を下回っています',
+      };
+    } else if (min !== undefined && value < min * 1.02) {
+      return {
+        severity: 'warning',
+        icon: <WarningIcon />,
+        message: '要注意：低入札価格調査の対象となる可能性があります',
+      };
+    } else if (max !== undefined && value > max) {
+      return {
+        severity: 'error',
+        icon: <ErrorIcon />,
+        message: '予定価格を超過しています',
+      };
+    } else if (max !== undefined && value > max * 0.95) {
+      return {
+        severity: 'warning',
+        icon: <WarningIcon />,
+        message: '価格競争力が低い可能性があります',
+      };
+    } else {
+      return {
+        severity: 'success',
+        icon: <CheckCircleIcon />,
+        message: '適正範囲内です',
+      };
+    }
+  };
+
+  const priceStatus = getPriceStatus();
 
   return (
     <Box>
@@ -162,9 +206,26 @@ function PriceInput({
         }}
       />
       {value && (
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-          {formatInOku(value)}
-        </Typography>
+        <>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+            {formatInOku(value)}
+          </Typography>
+          {priceStatus && (
+            <Alert 
+              severity={priceStatus.severity} 
+              icon={priceStatus.icon}
+              sx={{ 
+                mt: 1, 
+                py: 0.5,
+                '& .MuiAlert-message': {
+                  fontSize: '0.875rem'
+                }
+              }}
+            >
+              {priceStatus.message}
+            </Alert>
+          )}
+        </>
       )}
     </Box>
   );

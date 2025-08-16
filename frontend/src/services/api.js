@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:8000';
+import { API_BASE_URL } from '../config';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -45,7 +44,7 @@ export const tenderAPI = {
 
 export const predictionAPI = {
   // 単一案件の予測
-  predictSingle: async (tenderId, bidAmount, companyName = '星田建設株式会社') => {
+  predictSingle: async (tenderId, bidAmount, companyName = 'いであ株式会社') => {
     const response = await api.post('/predict', {
       tender_id: tenderId,
       bid_amount: bidAmount,
@@ -55,7 +54,7 @@ export const predictionAPI = {
   },
 
   // 複数案件の一括予測
-  predictBulk: async (filters, bidAmount, companyName = '星田建設株式会社', useRatio = true, priceRange = null) => {
+  predictBulk: async (filters, bidAmount, companyName = 'いであ株式会社', useRatio = true, priceRange = null) => {
     const requestData = {
       ...filters,
       bid_amount: bidAmount,
@@ -82,6 +81,16 @@ export const companyAPI = {
     } catch (error) {
       // エラー時はモックデータを返す
       console.error('Failed to fetch company strengths:', error);
+      
+      // 401エラーの場合は認証をリセット
+      if (error.response && error.response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('company_name');
+        localStorage.removeItem('company_id');
+        // ページをリロードしてログイン画面に戻す
+        window.location.reload();
+        return null;
+      }
       const currentCompanyName = localStorage.getItem('company_name') || '星田建設株式会社';
       return {
         company_name: currentCompanyName,

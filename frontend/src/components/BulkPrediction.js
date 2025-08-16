@@ -111,14 +111,26 @@ function BulkPrediction() {
       if (filters.municipality && filters.municipality !== 'すべて') searchParams.municipality = filters.municipality;
       if (filters.use_type && filters.use_type !== 'すべて') searchParams.use_type = filters.use_type;
 
+      // ログインしている会社名を使用（デフォルトは「星田建設株式会社」）
+      const companyName = localStorage.getItem('company_name') || '星田建設株式会社';
+      
+      console.log('Bulk prediction request:', {
+        searchParams,
+        bid_amount: parseInt(filters.bid_amount),
+        company_name: companyName,
+        use_ratio: filters.use_ratio !== false
+      });
+      
       const result = await predictionAPI.predictBulk(
         searchParams,
         parseInt(filters.bid_amount),
-        '星田建設株式会社',
-        true,  // use_ratio = true
+        companyName,
+        filters.use_ratio !== false,  // use_ratioのデフォルトをtrueに
         filters.price_range  // 価格レンジを渡す
       );
-      setPredictions(result.predictions || result || []);
+      
+      console.log('Bulk prediction result:', result);
+      setPredictions(Array.isArray(result) ? result : (result.predictions || result || []));
     } catch (err) {
       setError('一括予測に失敗しました');
       console.error(err);

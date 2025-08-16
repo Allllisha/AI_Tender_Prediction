@@ -591,7 +591,10 @@ function App() {
       // デモ用の自動ログイン
       const demoLogin = async () => {
         try {
-          const response = await fetch('http://localhost:8000/auth/login', {
+          const apiUrl = window.location.hostname.includes('azurewebsites.net') 
+            ? 'https://app-bid-kacho-backend.azurewebsites.net' 
+            : (process.env.REACT_APP_API_URL || 'http://localhost:8000');
+          const response = await fetch(`${apiUrl}/auth/login`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

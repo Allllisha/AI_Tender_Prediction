@@ -34,7 +34,8 @@ services:
       - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
       - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
       - AZURE_OPENAI_DEPLOYMENT_NAME=${AZURE_OPENAI_DEPLOYMENT_NAME}
-      - DATABASE_URL=postgresql://bid_user:bid_password_2024@postgres:5432/bid_kacho_db
+      - DATABASE_URL=postgresql://bid_user:bid_password_2024@postgres:5432/bid_kacho_db?sslmode=disable
+      - SECRET_KEY=local-development-secret-key-change-in-production
     depends_on:
       postgres:
         condition: service_healthy
@@ -42,14 +43,15 @@ services:
       - bid-network
 
   frontend:
-    build: ./frontend
+    build: 
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8000
     container_name: bid-frontend
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_API_URL=http://localhost:8000
-      - WDS_SOCKET_HOST=127.0.0.1
-      - WATCHPACK_POLLING=true
+      - VITE_API_URL=http://localhost:8000
     depends_on:
       - backend
     networks:

@@ -21,6 +21,8 @@ import {
   LinearProgress,
   Fade,
   Pagination,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -35,6 +37,10 @@ import PriceInput from './common/PriceInput';
 import { tenderAPI } from '../services/api';
 
 function TenderSearch({ onSelectTender }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+  
   const [filters, setFilters] = useState({
     prefecture: 'すべて',
     municipality: 'すべて',
@@ -51,22 +57,61 @@ function TenderSearch({ onSelectTender }) {
     prefecture_municipalities: {},
   });
   const [searchResults, setSearchResults] = useState([]);
+  console.log('Current searchResults:', searchResults); // デバッグ用
+  console.log('searchResults length:', searchResults.length);
+  console.log('searchResults type:', typeof searchResults);
+  console.log('Is Array?:', Array.isArray(searchResults));
+  if (searchResults.length > 0) {
+    console.log('First item:', searchResults[0]);
+    console.log('First item type:', typeof searchResults[0]);
+    if (typeof searchResults[0] === 'string') {
+      console.warn('WARNING: searchResults contains strings instead of objects!');
+    }
+  }
   const [loading, setLoading] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const itemsPerPage = 12;
 
+  // 初期化処理
   useEffect(() => {
-    fetchFilterOptions();
-    // 初期検索を実行
-    handleSearch();
-  }, []);
+    const initializeComponent = async () => {
+      await fetchFilterOptions();
+      // フィルターオプション取得後に検索を実行
+      handleSearch();
+    };
+    initializeComponent();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 初回マウント時のみ実行
+
+  // フィルター変更時に自動検索（デバウンス付き）
+  useEffect(() => {
+    // 初回レンダリング時はスキップ
+    if (!filterOptions.prefectures || filterOptions.prefectures.length === 0) {
+      return;
+    }
+
+    // デバウンス: 500ms待ってから検索実行
+    const timeoutId = setTimeout(() => {
+      handleSearch();
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]); // filtersが変更されたら実行
 
   const fetchFilterOptions = async () => {
     try {
       const options = await tenderAPI.getFilterOptions();
-      setFilterOptions(options);
+      // デフォルト値を設定して、APIから欠落しているフィールドを補完
+      setFilterOptions({
+        prefectures: options.prefectures || [],
+        municipalities: options.municipalities || [],
+        use_types: options.use_types || [],
+        bid_methods: options.bid_methods || [],
+        prefecture_municipalities: options.prefecture_municipalities || {},
+      });
     } catch (error) {
       console.error('Failed to fetch filter options:', error);
       setError('フィルターオプションの取得に失敗しました');
@@ -124,10 +169,18 @@ function TenderSearch({ onSelectTender }) {
         }
       });
       const results = await tenderAPI.searchTenders(cleanFilters);
-      setSearchResults(results);
+      console.log('API Response:', results);
+      console.log('Response type:', typeof results);
+      console.log('Is Array?:', Array.isArray(results));
+      if (results && results.length > 0) {
+        console.log('First item:', results[0]);
+        console.log('First item type:', typeof results[0]);
+      }
+      setSearchResults(results || []);
     } catch (error) {
       console.error('Search failed:', error);
       setError('検索に失敗しました。しばらくしてから再度お試しください。');
+      setSearchResults([]);
     } finally {
       setLoading(false);
     }
@@ -163,10 +216,16 @@ function TenderSearch({ onSelectTender }) {
   };
 
   // ページネーション用のデータ計算
-  const totalPages = Math.ceil(searchResults.length / itemsPerPage);
+  const safeSearchResults = searchResults || [];
+  console.log('safeSearchResults type:', typeof safeSearchResults);
+  console.log('safeSearchResults length:', safeSearchResults.length);
+  if (safeSearchResults.length > 0) {
+    console.log('First item:', safeSearchResults[0]);
+  }
+  const totalPages = Math.ceil(safeSearchResults.length / itemsPerPage);
   const startIndex = (page - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedResults = searchResults.slice(startIndex, endIndex);
+  const paginatedResults = safeSearchResults.slice(startIndex, endIndex);
 
   return (
     <Box>
@@ -208,7 +267,7 @@ function TenderSearch({ onSelectTender }) {
               size="medium"
             >
               <MenuItem value="すべて">すべて</MenuItem>
-              {filterOptions.prefectures.map((pref) => (
+              {(filterOptions.prefectures || []).map((pref) => (
                 <MenuItem key={pref} value={pref}>
                   {pref}
                 </MenuItem>
@@ -229,14 +288,14 @@ function TenderSearch({ onSelectTender }) {
               {filters.prefecture !== 'すべて' && filterOptions.prefecture_municipalities && 
                filterOptions.prefecture_municipalities[filters.prefecture] ? (
                 // 特定の都道府県が選択されている場合、その都道府県の市区町村のみ表示
-                filterOptions.prefecture_municipalities[filters.prefecture].map((municipality) => (
+                (filterOptions.prefecture_municipalities[filters.prefecture] || []).map((municipality) => (
                   <MenuItem key={municipality} value={municipality}>
                     {municipality}
                   </MenuItem>
                 ))
               ) : (
                 // 都道府県が「すべて」の場合、全市区町村を表示
-                filterOptions.municipalities && filterOptions.municipalities.map((municipality) => (
+                (filterOptions.municipalities || []).map((municipality) => (
                   <MenuItem key={municipality} value={municipality}>
                     {municipality}
                   </MenuItem>
@@ -255,7 +314,7 @@ function TenderSearch({ onSelectTender }) {
               size="medium"
             >
               <MenuItem value="すべて">すべて</MenuItem>
-              {filterOptions.use_types.map((type) => (
+              {(filterOptions.use_types || []).map((type) => (
                 <MenuItem key={type} value={type}>
                   {type}
                 </MenuItem>
@@ -297,7 +356,7 @@ function TenderSearch({ onSelectTender }) {
                     size="medium"
                   >
                     <MenuItem value="すべて">すべて</MenuItem>
-                    {filterOptions.bid_methods.map((method) => (
+                    {(filterOptions.bid_methods || []).map((method) => (
                       <MenuItem key={method} value={method}>
                         {method}
                       </MenuItem>
@@ -330,32 +389,54 @@ function TenderSearch({ onSelectTender }) {
             </Collapse>
           </Grid>
 
-          {/* 検索ボタン */}
+          {/* 手動検索ボタン（オプション） */}
           <Grid item xs={12}>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-start', mt: { xs: 3, md: 4 } }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: { xs: 2, md: 3 } }}>
+              <Typography variant="caption" sx={{ color: '#757575', fontWeight: 200 }}>
+                フィルター変更時に自動検索されます
+              </Typography>
               <Button
-                variant="contained"
-                size="large"
+                variant="outlined"
+                size="small"
                 onClick={handleSearch}
                 disabled={loading}
-                fullWidth
+                startIcon={<SearchIcon />}
                 sx={{ 
-                  px: { xs: 4, md: 6 },
-                  py: { xs: 2, md: 3 },
-                  fontSize: { xs: '1rem', md: '1.1rem' },
-                  fontWeight: 500,
-                  letterSpacing: '0em',
-                  maxWidth: { xs: 'none', sm: 'auto' },
+                  px: { xs: 2, md: 3 },
+                  py: { xs: 1, md: 1.5 },
+                  fontSize: { xs: '0.875rem', md: '0.95rem' },
+                  fontWeight: 400,
+                  borderColor: '#bdbdbd',
+                  color: '#757575',
+                  '&:hover': {
+                    borderColor: '#212121',
+                    backgroundColor: '#f5f5f5',
+                  }
                 }}
               >
-                検索実行
+                再検索
               </Button>
             </Box>
           </Grid>
         </Grid>
       </Paper>
 
-      {loading && <LinearProgress sx={{ mb: 2 }} />}
+      {loading && (
+        <Box sx={{ mb: 2 }}>
+          <LinearProgress />
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              mt: 1, 
+              textAlign: 'center', 
+              color: '#757575',
+              fontWeight: 200
+            }}
+          >
+            検索中...
+          </Typography>
+        </Box>
+      )}
       
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -376,13 +457,15 @@ function TenderSearch({ onSelectTender }) {
           検索結果
         </Typography>
         <Typography variant="h6" sx={{ fontWeight: 400, color: '#757575' }}>
-          {searchResults.length}件の案件が見つかりました
+          {safeSearchResults.length}件の案件が見つかりました
         </Typography>
       </Box>
 
       <Grid container spacing={{ xs: 3, md: 6 }}>
-        {paginatedResults.map((tender, index) => (
-          <Grid item xs={12} sm={6} lg={4} key={tender.tender_id}>
+        {paginatedResults.map((tender, index) => {
+          console.log(`Rendering tender ${index}:`, tender);
+          return (
+          <Grid item xs={12} sm={6} lg={4} key={tender.tender_id || index}>
             <Card 
               elevation={0}
               sx={{ 
@@ -413,7 +496,8 @@ function TenderSearch({ onSelectTender }) {
                     fontSize: { xs: '1.1rem', md: '1.25rem' }
                   }}
                 >
-                  {tender.title}
+                  {console.log('Displaying title:', tender.title, 'type:', typeof tender.title)}
+                  {tender.title || 'タイトルなし'}
                 </Typography>
 
                 <Box sx={{ mb: { xs: 3, md: 4 } }}>
@@ -476,49 +560,77 @@ function TenderSearch({ onSelectTender }) {
               </CardContent>
             </Card>
           </Grid>
-        ))}
+        )})}
       </Grid>
 
       {/* ページネーション */}
-      {searchResults.length > 0 && totalPages > 1 && (
+      {safeSearchResults.length > 0 && totalPages > 1 && (
         <Box sx={{ 
           mt: { xs: 4, md: 6 }, 
           display: 'flex', 
-          flexDirection: { xs: 'column', sm: 'row' },
-          justifyContent: 'center',
+          flexDirection: 'column',
           alignItems: 'center',
           gap: { xs: 2, md: 3 }
         }}>
-          <Typography variant="body2" sx={{ color: '#757575', fontWeight: 400 }}>
+          <Typography variant="body2" sx={{ color: '#757575', fontWeight: 400, textAlign: 'center' }}>
             {startIndex + 1}-{Math.min(endIndex, searchResults.length)} / {searchResults.length}件
           </Typography>
-          <Pagination 
-            count={totalPages} 
-            page={page} 
-            onChange={handlePageChange}
-            size="large"
-            sx={{
-              '& .MuiPaginationItem-root': {
-                fontWeight: 400,
-                fontSize: { xs: '0.875rem', md: '1rem' },
-                borderRadius: 0,
-                border: '1px solid #bdbdbd',
-                color: '#212121',
-                '&:hover': {
-                  backgroundColor: '#f5f5f5',
-                  borderColor: '#212121',
+          <Box sx={{ 
+            overflowX: 'auto', 
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            '&::-webkit-scrollbar': {
+              height: '4px',
+            },
+            '&::-webkit-scrollbar-track': {
+              backgroundColor: '#f5f5f5',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: '#bdbdbd',
+              borderRadius: '2px',
+            },
+          }}>
+            <Pagination 
+              count={totalPages} 
+              page={page} 
+              onChange={handlePageChange}
+              size={isMobile ? "small" : "large"}
+              siblingCount={isMobile ? 0 : (isTablet ? 1 : 2)}
+              boundaryCount={1}
+              sx={{
+                '& .MuiPagination-ul': {
+                  flexWrap: 'nowrap',
                 },
-                '&.Mui-selected': {
-                  backgroundColor: '#212121',
-                  color: '#ffffff',
-                  borderColor: '#212121',
+                '& .MuiPaginationItem-root': {
+                  fontWeight: 400,
+                  fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
+                  minWidth: { xs: '28px', sm: '32px', md: '40px' },
+                  height: { xs: '28px', sm: '32px', md: '40px' },
+                  margin: { xs: '0 2px', sm: '0 4px' },
+                  borderRadius: 0,
+                  border: '1px solid #bdbdbd',
+                  color: '#212121',
                   '&:hover': {
-                    backgroundColor: '#424242',
+                    backgroundColor: '#f5f5f5',
+                    borderColor: '#212121',
+                  },
+                  '&.Mui-selected': {
+                    backgroundColor: '#212121',
+                    color: '#ffffff',
+                    borderColor: '#212121',
+                    '&:hover': {
+                      backgroundColor: '#424242',
+                    },
                   },
                 },
-              },
-            }}
-          />
+                '& .MuiPaginationItem-ellipsis': {
+                  border: 'none',
+                  minWidth: { xs: '20px', sm: '24px', md: '32px' },
+                },
+              }}
+            />
+          </Box>
         </Box>
       )}
 

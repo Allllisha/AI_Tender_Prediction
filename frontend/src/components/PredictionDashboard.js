@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Grid,
@@ -42,6 +42,22 @@ function PredictionDashboard({ selectedTender, companyStrengths, prediction, set
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // 案件が選択されたら最低制限価格を初期値として設定
+  useEffect(() => {
+    if (selectedTender) {
+      // 最低制限価格があればそれを、なければ予定価格の90%を初期値とする
+      if (selectedTender.minimum_price) {
+        setBidAmount(selectedTender.minimum_price);
+      } else if (selectedTender.estimated_price) {
+        // 最低制限価格がない場合は予定価格の90%を初期値とする
+        setBidAmount(Math.floor(selectedTender.estimated_price * 0.9));
+      }
+      // 案件が変わったら前の予測結果をクリア
+      setPrediction(null);
+      setError(null);
+    }
+  }, [selectedTender, setPrediction]);
+
   const handlePredict = async () => {
     if (!selectedTender || !bidAmount) {
       setError('案件と入札額を入力してください');
@@ -51,9 +67,12 @@ function PredictionDashboard({ selectedTender, companyStrengths, prediction, set
     setLoading(true);
     setError(null);
     try {
+      // ログインしている会社名を使用（デフォルトは「いであ株式会社」）
+      const companyName = localStorage.getItem('company_name') || 'いであ株式会社';
       const result = await predictionAPI.predictSingle(
         selectedTender.tender_id,
-        parseInt(bidAmount)
+        parseInt(bidAmount),
+        companyName
       );
       setPrediction(result);
     } catch (err) {
@@ -392,16 +411,26 @@ function PredictionDashboard({ selectedTender, companyStrengths, prediction, set
                 <Typography 
                   variant="h1" 
                   sx={{ 
-                    fontWeight: 100, 
-                    color: prediction.rank === 'A' || prediction.rank === 'B' ? '#0a6e4a' : '#757575',
-                    my: 3
+                    fontWeight: 'bold', 
+                    color: getRankColor(prediction.rank),
+                    my: 3,
+                    textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                    fontSize: '5rem'
                   }}
                 >
                   {prediction.rank}
                 </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 200, color: '#212121' }}>
-                  {getRankDescription(prediction.rank)}
-                </Typography>
+                <Chip 
+                  label={getRankDescription(prediction.rank)}
+                  sx={{ 
+                    backgroundColor: getRankColor(prediction.rank),
+                    color: 'white',
+                    fontWeight: 'bold',
+                    fontSize: '1rem',
+                    px: 2,
+                    py: 0.5
+                  }}
+                />
               </Paper>
             </Grid>
 
@@ -536,7 +565,8 @@ function PredictionDashboard({ selectedTender, companyStrengths, prediction, set
                 sx={{
                   p: { xs: 4, md: 6 },
                   backgroundColor: prediction.rank === 'A' || prediction.rank === 'B' ? '#f5f5f5' : '#ffffff',
-                  border: prediction.rank === 'A' || prediction.rank === 'B' ? '1px solid #0a6e4a' : '1px solid #e0e0e0',
+                  border: `2px solid ${getRankColor(prediction.rank)}`,
+                  borderRadius: 2,
                 }}
               >
                 <Typography variant="caption" sx={{ color: '#757575', fontWeight: 200, textTransform: 'uppercase', letterSpacing: '0.02em', mb: 3, display: 'block' }}>

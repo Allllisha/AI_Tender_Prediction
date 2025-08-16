@@ -12,8 +12,11 @@ from sqlalchemy.orm import Session
 from database import get_db
 import models
 
-# 環境変数から取得（本番環境では必ず変更すること）
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production-2024")
+# 環境変数から取得（本番環境で必須）
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
+if SECRET_KEY == "your-secret-key-change-this-in-production":
+    import warnings
+    warnings.warn("Using default SECRET_KEY. Please set SECRET_KEY environment variable in production!")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24時間
 

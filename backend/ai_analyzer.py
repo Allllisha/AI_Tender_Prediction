@@ -8,14 +8,21 @@ class AIAnalyzer:
             from openai import AzureOpenAI
             
             # API version
-            api_version = os.getenv('AZURE_OPENAI_API_VERSION', '2025-01-01-preview')
+            api_version = os.getenv('AZURE_OPENAI_API_VERSION')
+            endpoint = os.getenv('AZURE_OPENAI_ENDPOINT')
+            api_key = os.getenv('AZURE_OPENAI_API_KEY')
+            
+            if not all([api_version, endpoint, api_key]):
+                raise ValueError("Azure OpenAI environment variables are required")
             
             self.client = AzureOpenAI(
-                azure_endpoint=os.getenv('AZURE_OPENAI_ENDPOINT'),
-                api_key=os.getenv('AZURE_OPENAI_API_KEY'),
+                azure_endpoint=endpoint,
+                api_key=api_key,
                 api_version=api_version
             )
-            self.deployment_name = os.getenv('AZURE_OPENAI_DEPLOYMENT_NAME', 'gpt-4o-2')
+            self.deployment_name = os.getenv('AZURE_OPENAI_DEPLOYMENT_NAME')
+            if not self.deployment_name:
+                raise ValueError("AZURE_OPENAI_DEPLOYMENT_NAME is required")
             print(f"AI Analyzer initialized successfully with API version: {api_version}")
         except Exception as e:
             print(f"AI Analyzer initialization failed: {e}")

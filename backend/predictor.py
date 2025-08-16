@@ -1,5 +1,4 @@
-import numpy as np
-import pandas as pd
+import statistics
 from typing import Dict, List, Tuple
 from ai_analyzer import AIAnalyzer
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -45,15 +44,18 @@ class BidPredictor:
         ai_analysis = {}
         if self.ai_analyzer:
             avg_participants = 0
-            if 'participants_count' in similar_awards.columns and len(similar_awards) > 0:
-                avg_val = similar_awards['participants_count'].mean()
-                avg_participants = avg_val if not pd.isna(avg_val) else 0
+            if len(similar_awards) > 0:
+                participant_counts = [a.get('participants_count', 0) for a in similar_awards if a.get('participants_count')]
+                avg_participants = sum(participant_counts) / len(participant_counts) if participant_counts else 0
+            else:
+                avg_participants = 0
             
+            prices = [award['contract_amount'] for award in similar_awards] if similar_awards else []
             similar_awards_summary = {
                 'count': len(similar_awards),
-                'median': int(similar_awards['contract_amount'].median()) if len(similar_awards) > 0 else 0,
-                'min': int(similar_awards['contract_amount'].min()) if len(similar_awards) > 0 else 0,
-                'max': int(similar_awards['contract_amount'].max()) if len(similar_awards) > 0 else 0,
+                'median': int(statistics.median(prices)) if prices else 0,
+                'min': int(min(prices)) if prices else 0,
+                'max': int(max(prices)) if prices else 0,
                 'avg_participants': avg_participants
             }
             ai_analysis = self.ai_analyzer.analyze_bid_risks(tender, bid_amount, similar_awards_summary, company_strengths)
@@ -120,7 +122,7 @@ class BidPredictor:
             max_price: 入札額の最大値フィルター
         """
         start_time = time.time()
-        tenders = self.data_loader.search_tenders(**search_params)
+        tenders = self.data_loader.search_tenders(search_params)
         results = []
         
         # 処理対象の案件を準備
@@ -140,6 +142,11 @@ class BidPredictor:
                 
             target_tenders.append((tender, actual_bid_amount))
         
+        # 対象案件がない場合は空のリストを返す
+        if not target_tenders:
+            print("No tenders match the criteria for bulk prediction")
+            return []
+        
         # 並行処理で予測を実行
         def predict_wrapper(tender_data):
             tender, actual_bid_amount = tender_data
@@ -150,7 +157,7 @@ class BidPredictor:
                 return None
         
         # ThreadPoolExecutorで並行実行（最大8スレッド）
-        with ThreadPoolExecutor(max_workers=min(8, len(target_tenders))) as executor:
+        with ThreadPoolExecutor(max_workers=min(8, max(1, len(target_tenders)))) as executor:
             # 全ての予測タスクを投入
             future_to_tender = {executor.submit(predict_wrapper, tender_data): tender_data 
                               for tender_data in target_tenders}
@@ -170,12 +177,14 @@ class BidPredictor:
         return results
         
     def _calculate_prediction(self, bid_amount: int, tender: Dict, 
-                            similar_awards: pd.DataFrame, company_strengths: Dict) -> Tuple[str, float, str]:
+                            similar_awards: list, company_strengths: Dict) -> Tuple[str, float, str]:
         """予測計算のコアロジック"""
         
         # 基準価格の計算（類似案件の中央値）
         if len(similar_awards) > 0:
-            median_price = similar_awards['contract_amount'].median()
+            import statistics
+            prices = [award['contract_amount'] for award in similar_awards]
+            median_price = statistics.median(prices)
             n_similar = len(similar_awards)
         else:
             # 類似案件がない場合は予定価格の90%を基準とする
@@ -223,16 +232,16 @@ class BidPredictor:
         win_prob = base_win_prob
         
         # 地域での実績による補正
-        if company_strengths['prefectures'].get(tender['prefecture'], 0) > 10:
+        if company_strengths.get('top_prefectures', {}).get(tender['prefecture'], 0) > 10:
             win_prob += 0.10  # 該当地域で10件以上の実績があれば+10%
-        elif company_strengths['prefectures'].get(tender['prefecture'], 0) > 5:
+        elif company_strengths.get('top_prefectures', {}).get(tender['prefecture'], 0) > 5:
             win_prob += 0.05  # 5件以上なら+5%
             
-        # 用途での実績による補正
-        if company_strengths['use_types'].get(tender['use_type'], 0) > 15:
-            win_prob += 0.08  # 該当用途で15件以上の実績があれば+8%
-        elif company_strengths['use_types'].get(tender['use_type'], 0) > 8:
-            win_prob += 0.04  # 8件以上なら+4%
+        # 用途での実績による補正（現時点ではデータがないのでスキップ）
+        # if company_strengths.get('use_types', {}).get(tender['use_type'], 0) > 15:
+        #     win_prob += 0.08  # 該当用途で15件以上の実績があれば+8%
+        # elif company_strengths.get('use_types', {}).get(tender['use_type'], 0) > 8:
+        #     win_prob += 0.04  # 8件以上なら+4%
             
         # 総合評価方式での技術力補正
         if tender['bid_method'] == '総合評価方式' and company_strengths.get('avg_tech_score'):
@@ -269,21 +278,34 @@ class BidPredictor:
             
         return rank, round(win_prob, 3), confidence
         
-    def _generate_basis(self, bid_amount: int, tender: Dict, similar_awards: pd.DataFrame) -> Dict:
+    def _generate_basis(self, bid_amount: int, tender: Dict, similar_awards: list) -> Dict:
         """予測根拠の生成"""
+        if len(similar_awards) > 0:
+            import statistics
+            prices = [award['contract_amount'] for award in similar_awards]
+            median_price = int(statistics.median(prices))
+            min_price = min(prices)
+            max_price = max(prices)
+            price_gap = bid_amount - median_price
+        else:
+            median_price = 0
+            min_price = 0
+            max_price = 0
+            price_gap = 0
+            
         basis = {
             'n_similar': len(similar_awards),
-            'similar_median': int(similar_awards['contract_amount'].median()) if len(similar_awards) > 0 else 0,
-            'similar_min': int(similar_awards['contract_amount'].min()) if len(similar_awards) > 0 else 0,
-            'similar_max': int(similar_awards['contract_amount'].max()) if len(similar_awards) > 0 else 0,
-            'price_gap': bid_amount - int(similar_awards['contract_amount'].median()) if len(similar_awards) > 0 else 0,
+            'similar_median': median_price,
+            'similar_min': min_price,
+            'similar_max': max_price,
+            'price_gap': price_gap,
             'estimated_price': tender['estimated_price'],
             'minimum_price': tender['minimum_price'],
             'bid_vs_estimated_ratio': round(bid_amount / tender['estimated_price'] * 100, 1)
         }
         return basis
         
-    def _analyze_risks(self, bid_amount: int, tender: Dict, similar_awards: pd.DataFrame, 
+    def _analyze_risks(self, bid_amount: int, tender: Dict, similar_awards: list, 
                       company_strengths: Dict) -> List[str]:
         """リスク要因の分析（フォールバック用）"""
         # AIが利用できない場合のみの最小限のフォールバック
@@ -295,7 +317,9 @@ class BidPredictor:
             
         # 基本的なリスク判定のみ
         if len(similar_awards) > 0:
-            median_price = similar_awards['contract_amount'].median()
+            import statistics
+            prices = [award['contract_amount'] for award in similar_awards]
+            median_price = statistics.median(prices)
             price_ratio = bid_amount / median_price
             
             if price_ratio > 1.2:
@@ -309,7 +333,7 @@ class BidPredictor:
         return risks
         
     def _generate_judgment_reason(self, rank: str, win_prob: float, bid_amount: int, 
-                                 tender: Dict, similar_awards: pd.DataFrame, 
+                                 tender: Dict, similar_awards: list, 
                                  company_strengths: Dict) -> str:
         """判断理由の生成"""
         reasons = []
@@ -320,7 +344,8 @@ class BidPredictor:
         
         # 類似案件の中央値との比較
         if len(similar_awards) > 0:
-            median_price = similar_awards['contract_amount'].median()
+            prices = [award['contract_amount'] for award in similar_awards]
+            median_price = statistics.median(prices)
             price_diff = bid_amount - median_price
             price_diff_pct = round((price_diff / median_price) * 100, 1) if median_price > 0 else 0
         else:
@@ -384,7 +409,7 @@ class BidPredictor:
         
         return " ".join(reasons)
     
-    def _get_similar_cases_details(self, similar_awards: pd.DataFrame) -> List[Dict]:
+    def _get_similar_cases_details(self, similar_awards: list) -> List[Dict]:
         """類似案件の詳細情報を取得"""
         cases = []
         
@@ -392,16 +417,31 @@ class BidPredictor:
             return cases
         
         # 最大10件まで詳細を返す
-        for idx, row in similar_awards.head(10).iterrows():
+        for award in similar_awards[:10]:
+            # contract_dateの処理
+            contract_date = award.get('contract_date')
+            if contract_date:
+                try:
+                    from datetime import datetime
+                    if isinstance(contract_date, str):
+                        dt = datetime.strptime(contract_date[:10], '%Y-%m-%d')
+                    else:
+                        dt = contract_date
+                    award_date_str = dt.strftime('%Y年%m月')
+                except:
+                    award_date_str = str(contract_date)[:7] if contract_date else ''
+            else:
+                award_date_str = ''
+            
             case = {
-                'contractor': row.get('contractor', '非公開'),
-                'contract_amount': int(row['contract_amount']),
-                'contract_amount_display': f"{int(row['contract_amount']/1000000):,}百万円",
-                'prefecture': row.get('prefecture', ''),
-                'use_type': row.get('use_type', ''),
-                'bid_method': row.get('bid_method', ''),
-                'award_date': row.get('award_date', '').strftime('%Y年%m月') if pd.notna(row.get('award_date')) else '',
-                'participants_count': int(row.get('participants_count', 0)) if pd.notna(row.get('participants_count')) else None
+                'contractor': award.get('contractor', '非公開'),
+                'contract_amount': int(award['contract_amount']),
+                'contract_amount_display': f"{int(award['contract_amount']/1000000):,}百万円",
+                'prefecture': award.get('prefecture', ''),
+                'use_type': award.get('use_type', ''),
+                'bid_method': award.get('bid_method', ''),
+                'award_date': award_date_str,
+                'participants_count': int(award.get('participants_count', 0)) if award.get('participants_count') else None
             }
             cases.append(case)
         

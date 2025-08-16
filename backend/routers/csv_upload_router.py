@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from database import get_db
 from auth import get_current_company
 import models
-import pandas as pd
+from datetime import datetime as dt
 
 router = APIRouter(prefix="/csv", tags=["CSVアップロード"])
 
@@ -89,7 +89,7 @@ async def upload_company_awards(
     try:
         # CSVファイルを読み込む
         contents = await file.read()
-        df = pd.read_csv(io.StringIO(contents.decode('utf-8')))
+        csv_reader = csv.DictReader(io.StringIO(contents.decode('utf-8')))
         
         # 必須カラムの確認
         required_columns = [
@@ -99,20 +99,39 @@ async def upload_company_awards(
             'win_rate', 'participants_count'
         ]
         
-        missing_columns = set(required_columns) - set(df.columns)
+        # 最初の行でヘッダーを確認
+        rows = list(csv_reader)
+        if not rows:
+            raise ValueError("CSVファイルが空です")
+        
+        headers = set(rows[0].keys())
+        missing_columns = set(required_columns) - headers
         if missing_columns:
             raise ValueError(f"必須カラムが不足しています: {', '.join(missing_columns)}")
         
         # 既存のデータを削除（オプション：重複を避けるため）
-        existing_tender_ids = df['tender_id'].tolist()
-        db.query(models.CompanyAward).filter(
-            models.CompanyAward.company_id == current_company.id,
-            models.CompanyAward.tender_id.in_(existing_tender_ids)
-        ).delete(synchronize_session=False)
+        existing_tender_ids = [row['tender_id'] for row in rows]
+        if existing_tender_ids:
+            db.query(models.CompanyAward).filter(
+                models.CompanyAward.company_id == current_company.id,
+                models.CompanyAward.tender_id.in_(existing_tender_ids)
+            ).delete(synchronize_session=False)
         
         # データを登録
         records_added = 0
-        for _, row in df.iterrows():
+        for row in rows:
+            # 日付の変換
+            award_date_str = row['award_date']
+            award_date = dt.strptime(award_date_str, '%Y-%m-%d').date()
+            
+            # technical_scoreの処理
+            technical_score = None
+            if row.get('technical_score') and row['technical_score'].strip():
+                try:
+                    technical_score = float(row['technical_score'])
+                except ValueError:
+                    pass
+            
             award = models.CompanyAward(
                 company_id=current_company.id,
                 tender_id=str(row['tender_id']),
@@ -123,12 +142,12 @@ async def upload_company_awards(
                 use_type=str(row['use_type']),
                 method=str(row['method']),
                 floor_area_m2=float(row['floor_area_m2']),
-                award_date=pd.to_datetime(row['award_date']).date(),
+                award_date=award_date,
                 award_amount_jpy=int(row['award_amount_jpy']),
                 estimated_price_jpy=int(row['estimated_price_jpy']),
                 win_rate=float(row['win_rate']),
                 participants_count=int(row['participants_count']),
-                technical_score=float(row['technical_score']) if pd.notna(row.get('technical_score')) else None
+                technical_score=technical_score
             )
             db.add(award)
             records_added += 1
@@ -225,26 +244,53 @@ async def download_csv_template():
     """
     CSVテンプレートをダウンロード
     """
-    template_data = {
-        "tender_id": ["SAMPLE-001", "SAMPLE-002"],
-        "project_name": ["〇〇小学校改築工事", "△△庁舎耐震補強工事"],
-        "publisher": ["東京都", "神奈川県"],
-        "prefecture": ["東京都", "神奈川県"],
-        "municipality": ["新宿区", "横浜市"],
-        "use_type": ["学校", "庁舎"],
-        "method": ["一般競争入札", "総合評価方式"],
-        "floor_area_m2": [3500.5, 4200.0],
-        "award_date": ["2024-01-15", "2024-02-20"],
-        "award_amount_jpy": [450000000, 680000000],
-        "estimated_price_jpy": [500000000, 750000000],
-        "win_rate": [90.0, 90.7],
-        "participants_count": [5, 8],
-        "technical_score": [85.5, 92.0]
-    }
+    # テンプレートデータ
+    headers = [
+        "tender_id", "project_name", "publisher", "prefecture",
+        "municipality", "use_type", "method", "floor_area_m2",
+        "award_date", "award_amount_jpy", "estimated_price_jpy",
+        "win_rate", "participants_count", "technical_score"
+    ]
     
-    df = pd.DataFrame(template_data)
+    template_rows = [
+        {
+            "tender_id": "SAMPLE-001",
+            "project_name": "〇〇小学校改築工事",
+            "publisher": "東京都",
+            "prefecture": "東京都",
+            "municipality": "新宿区",
+            "use_type": "学校",
+            "method": "一般競争入札",
+            "floor_area_m2": "3500.5",
+            "award_date": "2024-01-15",
+            "award_amount_jpy": "450000000",
+            "estimated_price_jpy": "500000000",
+            "win_rate": "90.0",
+            "participants_count": "5",
+            "technical_score": "85.5"
+        },
+        {
+            "tender_id": "SAMPLE-002",
+            "project_name": "△△庁舎耐震補強工事",
+            "publisher": "神奈川県",
+            "prefecture": "神奈川県",
+            "municipality": "横浜市",
+            "use_type": "庁舎",
+            "method": "総合評価方式",
+            "floor_area_m2": "4200.0",
+            "award_date": "2024-02-20",
+            "award_amount_jpy": "680000000",
+            "estimated_price_jpy": "750000000",
+            "win_rate": "90.7",
+            "participants_count": "8",
+            "technical_score": "92.0"
+        }
+    ]
+    
     output = io.StringIO()
-    df.to_csv(output, index=False)
+    csv_writer = csv.DictWriter(output, fieldnames=headers)
+    csv_writer.writeheader()
+    csv_writer.writerows(template_rows)
     output.seek(0)
     
     from fastapi.responses import StreamingResponse

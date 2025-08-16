@@ -4,14 +4,19 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# package.jsonとpackage-lock.jsonをコピー
-COPY package*.json ./
+# package.jsonをコピー
+COPY package.json ./
 
 # 依存関係をインストール
-RUN npm ci
+RUN npm install
 
 # アプリケーションコードをコピー
 COPY . .
+
+# ビルド時の環境変数を設定（Vite用）
+# デフォルトはAzure用のURL
+ARG VITE_API_URL=https://app-bid-kacho-backend.azurewebsites.net
+ENV VITE_API_URL=$VITE_API_URL
 
 # 本番用ビルド
 RUN npm run build
@@ -24,7 +29,7 @@ WORKDIR /app
 # serve パッケージをインストール（静的ファイルサーバー）
 RUN npm install -g serve
 
-# ビルド済みファイルをコピー
+# ビルド済みファイルをコピー（Viteはbuildディレクトリに出力）
 COPY --from=builder /app/build ./build
 
 # ポート3000を公開

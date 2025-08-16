@@ -49,7 +49,10 @@ function CSVUpload() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/csv/upload-history', {
+      const apiUrl = window.location.hostname.includes('azurewebsites.net') 
+        ? 'https://app-bid-kacho-backend.azurewebsites.net' 
+        : (import.meta.env.VITE_API_URL || 'http://localhost:8000');
+      const response = await fetch(`${apiUrl}/csv/upload-history`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -92,7 +95,10 @@ function CSVUpload() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/csv/upload-awards', {
+      const apiUrl = window.location.hostname.includes('azurewebsites.net') 
+        ? 'https://app-bid-kacho-backend.azurewebsites.net' 
+        : (import.meta.env.VITE_API_URL || 'http://localhost:8000');
+      const response = await fetch(`${apiUrl}/csv/upload-awards`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -124,7 +130,10 @@ function CSVUpload() {
       const token = localStorage.getItem('token');
       console.log('Downloading template with token:', token ? 'exists' : 'missing');
       
-      const response = await fetch('http://localhost:8000/csv/download-template', {
+      const apiUrl = window.location.hostname.includes('azurewebsites.net') 
+        ? 'https://app-bid-kacho-backend.azurewebsites.net' 
+        : (import.meta.env.VITE_API_URL || 'http://localhost:8000');
+      const response = await fetch(`${apiUrl}/csv/download-template`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
