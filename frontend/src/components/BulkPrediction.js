@@ -169,8 +169,8 @@ function BulkPrediction() {
 
   const getRankColor = (rank) => {
     const colors = {
-      A: 'success',
-      B: 'success',
+      A: 'primary',
+      B: 'primary',
       C: 'warning',
       D: 'warning',
       E: 'error',
@@ -389,10 +389,10 @@ function BulkPrediction() {
                     step={10000000}  // 1千万円刻み
                     sx={{
                       '& .MuiSlider-thumb': {
-                        backgroundColor: '#1b5e20',
+                        backgroundColor: '#1e3a5f',
                       },
                       '& .MuiSlider-track': {
-                        backgroundColor: '#1b5e20',
+                        backgroundColor: '#1e3a5f',
                       },
                       '& .MuiSlider-rail': {
                         backgroundColor: '#e0e0e0',
@@ -480,11 +480,11 @@ function BulkPrediction() {
                   p: { xs: 3, md: 4 }, 
                   textAlign: 'center', 
                   backgroundColor: '#ffffff',
-                  border: '1px solid #0a6e4a',
+                  border: '1px solid #1e3a5f',
                 }}
                 elevation={0}
               >
-                <Typography variant="h2" sx={{ fontWeight: 100, color: '#0a6e4a', mb: 2, fontSize: { xs: '2rem', md: '3rem' } }}>
+                <Typography variant="h2" sx={{ fontWeight: 100, color: '#1e3a5f', mb: 2, fontSize: { xs: '2rem', md: '3rem' } }}>
                   {stats.recommendedCount}
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 200, color: '#757575', fontSize: { xs: '0.8rem', md: '1rem' } }}>
@@ -527,7 +527,7 @@ function BulkPrediction() {
                 <Box sx={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: { xs: 1, md: 0 } }}>
                   {Object.entries(stats.rankCounts).map(([rank, count]) => (
                     <Box key={rank} sx={{ textAlign: 'center' }}>
-                      <Typography variant="h6" sx={{ fontWeight: 200, color: rank === 'A' || rank === 'B' ? '#0a6e4a' : '#757575' }}>
+                      <Typography variant="h6" sx={{ fontWeight: 200, color: rank === 'A' || rank === 'B' ? '#1e3a5f' : '#757575' }}>
                         {rank}
                       </Typography>
                       <Typography variant="body2" sx={{ fontWeight: 200, color: '#757575' }}>
@@ -617,7 +617,7 @@ function BulkPrediction() {
                             variant="h6" 
                             sx={{ 
                               fontWeight: 200, 
-                              color: prediction.rank === 'A' || prediction.rank === 'B' ? '#0a6e4a' : '#757575' 
+                              color: prediction.rank === 'A' || prediction.rank === 'B' ? '#1e3a5f' : '#757575' 
                             }}
                           >
                             {prediction.rank}
@@ -628,7 +628,7 @@ function BulkPrediction() {
                             variant="body1" 
                             sx={{ 
                               fontWeight: 200,
-                              color: prediction.win_probability >= 0.5 ? '#0a6e4a' : '#757575'
+                              color: prediction.win_probability >= 0.5 ? '#1e3a5f' : '#757575'
                             }}
                           >
                             {Math.round(prediction.win_probability * 100)}%
@@ -639,7 +639,7 @@ function BulkPrediction() {
                             variant="body1" 
                             sx={{ 
                               fontWeight: 200,
-                              color: prediction.rank === 'A' || prediction.rank === 'B' ? '#0a6e4a' : '#757575'
+                              color: prediction.rank === 'A' || prediction.rank === 'B' ? '#1e3a5f' : '#757575'
                             }}
                           >
                             {getRankScore(prediction.rank)}/5

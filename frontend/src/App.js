@@ -42,9 +42,9 @@ const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      light: '#0a6e4a',
-      main: '#0a6e4a',
-      dark: '#085a3c',
+      light: '#5c7cfa',
+      main: '#1e3a5f',
+      dark: '#15304d',
       contrastText: '#ffffff',
     },
     secondary: {
@@ -54,14 +54,15 @@ const theme = createTheme({
       contrastText: '#ffffff',
     },
     success: {
-      light: '#0a6e4a',
-      main: '#0a6e4a',
-      dark: '#085a3c',
+      light: '#2a4a6f',
+      main: '#1e3a5f',
+      dark: '#15304d',
+      contrastText: '#ffffff',
     },
     info: {
-      light: '#757575',
-      main: '#424242',
-      dark: '#212121',
+      light: '#5c7cfa',
+      main: '#1e3a5f',
+      dark: '#15304d',
     },
     warning: {
       light: '#757575',
@@ -321,7 +322,7 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: '#1b5e20',  // 深い緑色に変更
+          backgroundColor: '#1e3a5f',  // 落ち着いた紺色に変更
           boxShadow: 'none',
           borderBottom: 'none',
         },
@@ -351,8 +352,8 @@ const theme = createTheme({
           color: '#ffffff',
           border: '2px solid #212121',
           '&:hover': {
-            backgroundColor: '#0a6e4a',
-            borderColor: '#0a6e4a',
+            backgroundColor: '#1e3a5f',
+            borderColor: '#1e3a5f',
           },
         },
         outlined: {
@@ -411,9 +412,9 @@ const theme = createTheme({
           border: '1px solid #bdbdbd',
         },
         colorPrimary: {
-          backgroundColor: '#0a6e4a',
+          backgroundColor: '#1e3a5f',
           color: '#ffffff',
-          border: '1px solid #0a6e4a',
+          border: '1px solid #1e3a5f',
         },
         colorSecondary: {
           backgroundColor: '#757575',
@@ -437,7 +438,7 @@ const theme = createTheme({
               borderWidth: '2px',
             },
             '&.Mui-focused fieldset': {
-              borderColor: '#0a6e4a',
+              borderColor: '#1e3a5f',
               borderWidth: '2px',
             },
           },
@@ -445,7 +446,7 @@ const theme = createTheme({
             fontWeight: 400,
             color: '#757575',
             '&.Mui-focused': {
-              color: '#0a6e4a',
+              color: '#1e3a5f',
             },
           },
         },
@@ -483,7 +484,7 @@ const theme = createTheme({
           backgroundColor: '#e0e0e0',
         },
         bar: {
-          backgroundColor: '#0a6e4a',
+          backgroundColor: '#1e3a5f',
         },
       },
     },
@@ -528,6 +529,40 @@ const theme = createTheme({
           border: '1px solid #e0e0e0',
           fontWeight: 200,
         },
+        standardSuccess: {
+          backgroundColor: '#e8f0fe',
+          color: '#1e3a5f',
+          '& .MuiAlert-icon': {
+            color: '#1e3a5f',
+          },
+        },
+        standardInfo: {
+          backgroundColor: '#e8f0fe',
+          color: '#1e3a5f',
+          '& .MuiAlert-icon': {
+            color: '#1e3a5f',
+          },
+        },
+        filledSuccess: {
+          backgroundColor: '#1e3a5f',
+        },
+        filledInfo: {
+          backgroundColor: '#1e3a5f',
+        },
+        outlinedSuccess: {
+          borderColor: '#1e3a5f',
+          color: '#1e3a5f',
+          '& .MuiAlert-icon': {
+            color: '#1e3a5f',
+          },
+        },
+        outlinedInfo: {
+          borderColor: '#1e3a5f',
+          color: '#1e3a5f',
+          '& .MuiAlert-icon': {
+            color: '#1e3a5f',
+          },
+        },
       },
     },
     MuiSelect: {
@@ -545,10 +580,10 @@ const theme = createTheme({
             backgroundColor: '#fafafa',
           },
           '&.Mui-selected': {
-            backgroundColor: '#0a6e4a',
+            backgroundColor: '#1e3a5f',
             color: '#ffffff',
             '&:hover': {
-              backgroundColor: '#085a3c',
+              backgroundColor: '#15304d',
             },
           },
         },
@@ -912,7 +947,7 @@ function App() {
               borderBottom: '1px solid #e0e0e0'
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <BiGlasses style={{ fontSize: 24, color: '#0a6e4a', marginRight: 8 }} />
+                <BiGlasses style={{ fontSize: 24, color: '#1e3a5f', marginRight: 8 }} />
                 <Typography variant="h6" sx={{ fontWeight: 400, color: '#212121' }}>
                   入札課長
                 </Typography>
@@ -933,12 +968,12 @@ function App() {
                 sx={{
                   py: 1.5,
                   '&.Mui-selected': {
-                    backgroundColor: 'rgba(10, 110, 74, 0.08)',
-                    borderRight: '3px solid #0a6e4a',
+                    backgroundColor: 'rgba(66, 99, 235, 0.08)',
+                    borderRight: '3px solid #1e3a5f',
                   },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 40, color: tabValue === 0 ? '#0a6e4a' : '#757575' }}>
+                <ListItemIcon sx={{ minWidth: 40, color: tabValue === 0 ? '#1e3a5f' : '#757575' }}>
                   <FaSearch size={18} />
                 </ListItemIcon>
                 <ListItemText 
@@ -946,7 +981,7 @@ function App() {
                   primaryTypographyProps={{
                     fontSize: '1rem',
                     fontWeight: tabValue === 0 ? 500 : 400,
-                    color: tabValue === 0 ? '#0a6e4a' : '#212121'
+                    color: tabValue === 0 ? '#1e3a5f' : '#212121'
                   }}
                 />
               </ListItem>
@@ -961,12 +996,12 @@ function App() {
                 sx={{
                   py: 1.5,
                   '&.Mui-selected': {
-                    backgroundColor: 'rgba(10, 110, 74, 0.08)',
-                    borderRight: '3px solid #0a6e4a',
+                    backgroundColor: 'rgba(66, 99, 235, 0.08)',
+                    borderRight: '3px solid #1e3a5f',
                   },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 40, color: tabValue === 1 ? '#0a6e4a' : '#757575' }}>
+                <ListItemIcon sx={{ minWidth: 40, color: tabValue === 1 ? '#1e3a5f' : '#757575' }}>
                   <FaChartLine size={18} />
                 </ListItemIcon>
                 <ListItemText 
@@ -974,7 +1009,7 @@ function App() {
                   primaryTypographyProps={{
                     fontSize: '1rem',
                     fontWeight: tabValue === 1 ? 500 : 400,
-                    color: tabValue === 1 ? '#0a6e4a' : '#212121'
+                    color: tabValue === 1 ? '#1e3a5f' : '#212121'
                   }}
                 />
               </ListItem>
@@ -989,12 +1024,12 @@ function App() {
                 sx={{
                   py: 1.5,
                   '&.Mui-selected': {
-                    backgroundColor: 'rgba(10, 110, 74, 0.08)',
-                    borderRight: '3px solid #0a6e4a',
+                    backgroundColor: 'rgba(66, 99, 235, 0.08)',
+                    borderRight: '3px solid #1e3a5f',
                   },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 40, color: tabValue === 2 ? '#0a6e4a' : '#757575' }}>
+                <ListItemIcon sx={{ minWidth: 40, color: tabValue === 2 ? '#1e3a5f' : '#757575' }}>
                   <FaListUl size={18} />
                 </ListItemIcon>
                 <ListItemText 
@@ -1002,7 +1037,7 @@ function App() {
                   primaryTypographyProps={{
                     fontSize: '1rem',
                     fontWeight: tabValue === 2 ? 500 : 400,
-                    color: tabValue === 2 ? '#0a6e4a' : '#212121'
+                    color: tabValue === 2 ? '#1e3a5f' : '#212121'
                   }}
                 />
               </ListItem>
@@ -1017,12 +1052,12 @@ function App() {
                 sx={{
                   py: 1.5,
                   '&.Mui-selected': {
-                    backgroundColor: 'rgba(10, 110, 74, 0.08)',
-                    borderRight: '3px solid #0a6e4a',
+                    backgroundColor: 'rgba(66, 99, 235, 0.08)',
+                    borderRight: '3px solid #1e3a5f',
                   },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 40, color: tabValue === 3 ? '#0a6e4a' : '#757575' }}>
+                <ListItemIcon sx={{ minWidth: 40, color: tabValue === 3 ? '#1e3a5f' : '#757575' }}>
                   <FaBuilding size={18} />
                 </ListItemIcon>
                 <ListItemText 
@@ -1030,7 +1065,7 @@ function App() {
                   primaryTypographyProps={{
                     fontSize: '1rem',
                     fontWeight: tabValue === 3 ? 500 : 400,
-                    color: tabValue === 3 ? '#0a6e4a' : '#212121'
+                    color: tabValue === 3 ? '#1e3a5f' : '#212121'
                   }}
                 />
               </ListItem>
@@ -1045,12 +1080,12 @@ function App() {
                 sx={{
                   py: 1.5,
                   '&.Mui-selected': {
-                    backgroundColor: 'rgba(10, 110, 74, 0.08)',
-                    borderRight: '3px solid #0a6e4a',
+                    backgroundColor: 'rgba(66, 99, 235, 0.08)',
+                    borderRight: '3px solid #1e3a5f',
                   },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 40, color: tabValue === 4 ? '#0a6e4a' : '#757575' }}>
+                <ListItemIcon sx={{ minWidth: 40, color: tabValue === 4 ? '#1e3a5f' : '#757575' }}>
                   <FaDatabase size={18} />
                 </ListItemIcon>
                 <ListItemText 
@@ -1058,7 +1093,7 @@ function App() {
                   primaryTypographyProps={{
                     fontSize: '1rem',
                     fontWeight: tabValue === 4 ? 500 : 400,
-                    color: tabValue === 4 ? '#0a6e4a' : '#212121'
+                    color: tabValue === 4 ? '#1e3a5f' : '#212121'
                   }}
                 />
               </ListItem>

@@ -147,8 +147,8 @@ function PriceInput({
       };
     } else {
       return {
-        severity: 'success',
-        icon: <CheckCircleIcon />,
+        severity: 'info',
+        icon: <CheckCircleIcon sx={{ color: '#1e3a5f' }} />,
         message: '適正範囲内です',
       };
     }

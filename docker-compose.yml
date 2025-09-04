@@ -5,7 +5,7 @@ services:
     image: postgres:15-alpine
     container_name: bid-postgres
     ports:
-      - "5432:5432"
+      - "5434:5432"
     environment:
       POSTGRES_DB: bid_kacho_db
       POSTGRES_USER: bid_user
@@ -49,7 +49,7 @@ services:
         VITE_API_URL: http://localhost:8000
     container_name: bid-frontend
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - VITE_API_URL=http://localhost:8000
     depends_on:

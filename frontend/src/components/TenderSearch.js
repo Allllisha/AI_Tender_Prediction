@@ -206,7 +206,7 @@ function TenderSearch({ onSelectTender }) {
     if (price >= 1000000000) return 'error'; // 10億円以上
     if (price >= 500000000) return 'warning'; // 5億円以上
     if (price >= 100000000) return 'info'; // 1億円以上
-    return 'success';
+    return 'primary';
   };
 
   const handlePageChange = (event, value) => {

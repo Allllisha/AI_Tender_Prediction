@@ -142,13 +142,13 @@ function CompanyStrengths({ strengths }) {
                 p: { xs: 3, md: 4 },
                 textAlign: 'center',
                 backgroundColor: '#ffffff',
-                border: '1px solid #0a6e4a',
+                border: '1px solid #1e3a5f',
               }}
             >
               <Typography variant="caption" sx={{ color: '#757575', fontWeight: 200, textTransform: 'uppercase', letterSpacing: '0.02em', fontSize: { xs: '0.7rem', md: '0.75rem' } }}>
                 総落札額
               </Typography>
-              <Typography variant="h2" sx={{ fontWeight: 100, color: '#0a6e4a', my: 2, fontSize: { xs: '2rem', md: '3rem' } }}>
+              <Typography variant="h2" sx={{ fontWeight: 100, color: '#1e3a5f', my: 2, fontSize: { xs: '2rem', md: '3rem' } }}>
                 {(strengths.total_amount / 100000000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}億
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 200, color: '#757575', fontSize: { xs: '0.9rem', md: '1rem' } }}>
@@ -213,7 +213,7 @@ function CompanyStrengths({ strengths }) {
               地域別実績
             </Typography>
             {strengths.strongest_prefecture && (
-              <Typography variant="h6" sx={{ fontWeight: 300, color: '#0a6e4a', mb: 4, fontSize: { xs: '1.1rem', md: '1.25rem' } }}>
+              <Typography variant="h6" sx={{ fontWeight: 300, color: '#1e3a5f', mb: 4, fontSize: { xs: '1.1rem', md: '1.25rem' } }}>
                 最強エリア: {strengths.strongest_prefecture}
               </Typography>
             )}
@@ -227,7 +227,7 @@ function CompanyStrengths({ strengths }) {
                     variant="h6" 
                     sx={{ 
                       fontWeight: 200, 
-                      color: index === 0 ? '#0a6e4a' : '#757575',
+                      color: index === 0 ? '#1e3a5f' : '#757575',
                       fontSize: { xs: '1rem', md: '1.25rem' }
                     }}
                   >
@@ -252,7 +252,7 @@ function CompanyStrengths({ strengths }) {
               用途別実績
             </Typography>
             {strengths.strongest_use_type && (
-              <Typography variant="h6" sx={{ fontWeight: 300, color: '#0a6e4a', mb: 4, fontSize: { xs: '1.1rem', md: '1.25rem' } }}>
+              <Typography variant="h6" sx={{ fontWeight: 300, color: '#1e3a5f', mb: 4, fontSize: { xs: '1.1rem', md: '1.25rem' } }}>
                 得意分野: {strengths.strongest_use_type}
               </Typography>
             )}
@@ -266,7 +266,7 @@ function CompanyStrengths({ strengths }) {
                     variant="h6" 
                     sx={{ 
                       fontWeight: 200, 
-                      color: index === 0 ? '#0a6e4a' : '#757575',
+                      color: index === 0 ? '#1e3a5f' : '#757575',
                       fontSize: { xs: '1rem', md: '1.25rem' }
                     }}
                   >

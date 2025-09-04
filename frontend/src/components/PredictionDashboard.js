@@ -99,8 +99,8 @@ function PredictionDashboard({ selectedTender, companyStrengths, prediction, set
 
   const getRankColor = (rank) => {
     const colors = {
-      A: '#4caf50',
-      B: '#8bc34a',
+      A: '#1e3a5f',
+      B: '#2a4a6f',
       C: '#ffc107',
       D: '#ff9800',
       E: '#f44336',
@@ -120,8 +120,8 @@ function PredictionDashboard({ selectedTender, companyStrengths, prediction, set
   };
 
   const getConfidenceIcon = (confidence) => {
-    if (confidence === 'high') return <CheckCircleIcon color="success" />;
-    if (confidence === 'medium') return <InfoIcon color="info" />;
+    if (confidence === 'high') return <CheckCircleIcon sx={{ color: '#1e3a5f' }} />;
+    if (confidence === 'medium') return <InfoIcon sx={{ color: '#1e3a5f' }} />;
     return <WarningIcon color="warning" />;
   };
 
@@ -235,7 +235,7 @@ function PredictionDashboard({ selectedTender, companyStrengths, prediction, set
             <Typography variant="caption" sx={{ color: '#757575', fontWeight: 200, textTransform: 'uppercase', letterSpacing: '0.02em' }}>
               予定価格
             </Typography>
-            <Typography variant="h6" sx={{ mt: 1, fontWeight: 300, color: '#0a6e4a', fontSize: { xs: '1.1rem', md: '1.25rem' } }}>
+            <Typography variant="h6" sx={{ mt: 1, fontWeight: 300, color: '#1e3a5f', fontSize: { xs: '1.1rem', md: '1.25rem' } }}>
               {formatPrice(selectedTender.estimated_price)}
             </Typography>
           </Grid>
@@ -306,7 +306,7 @@ function PredictionDashboard({ selectedTender, companyStrengths, prediction, set
                 <Typography variant="caption" sx={{ color: '#757575', fontWeight: 200, textTransform: 'uppercase', letterSpacing: '0.02em' }}>
                   予定価格比
                 </Typography>
-                <Typography variant="h6" sx={{ mt: 1, fontWeight: 300, color: '#0a6e4a', fontSize: { xs: '1.1rem', md: '1.25rem' } }}>
+                <Typography variant="h6" sx={{ mt: 1, fontWeight: 300, color: '#1e3a5f', fontSize: { xs: '1.1rem', md: '1.25rem' } }}>
                   {Math.round((parseInt(bidAmount) / selectedTender.estimated_price) * 100)}%
                 </Typography>
               </Box>
@@ -452,7 +452,7 @@ function PredictionDashboard({ selectedTender, companyStrengths, prediction, set
                   variant="h1" 
                   sx={{ 
                     fontWeight: 100, 
-                    color: prediction.win_probability >= 0.5 ? '#0a6e4a' : '#757575',
+                    color: prediction.win_probability >= 0.5 ? '#1e3a5f' : '#757575',
                     my: 3
                   }}
                 >
@@ -502,7 +502,7 @@ function PredictionDashboard({ selectedTender, companyStrengths, prediction, set
                       variant="body1" 
                       sx={{ 
                         fontWeight: 200,
-                        color: prediction.basis.price_gap > 0 ? '#757575' : '#0a6e4a'
+                        color: prediction.basis.price_gap > 0 ? '#757575' : '#1e3a5f'
                       }}
                     >
                       {formatPrice(Math.abs(prediction.basis.price_gap))}

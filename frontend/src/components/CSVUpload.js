@@ -165,7 +165,7 @@ function CSVUpload() {
   const getStatusChip = (status) => {
     switch (status) {
       case 'completed':
-        return <Chip label="完了" color="success" size="small" icon={<CheckCircleIcon />} />;
+        return <Chip label="完了" sx={{ backgroundColor: '#1e3a5f', color: '#ffffff' }} size="small" icon={<CheckCircleIcon sx={{ color: '#ffffff' }} />} />;
       case 'processing':
         return <Chip label="処理中" color="warning" size="small" icon={<HourglassEmptyIcon />} />;
       case 'failed':
@@ -291,10 +291,10 @@ function CSVUpload() {
               component="span"
               sx={{
                 mb: 2,
-                backgroundColor: '#1b5e20',
+                backgroundColor: '#1e3a5f',
                 color: '#ffffff',
                 '&:hover': {
-                  backgroundColor: '#2e7d32',
+                  backgroundColor: '#15304d',
                 },
                 width: 80,
                 height: 80,
@@ -348,7 +348,7 @@ function CSVUpload() {
         )}
         
         {success && (
-          <Alert severity="success" sx={{ mt: 2 }}>
+          <Alert severity="info" sx={{ mt: 2 }}>
             {success}
           </Alert>
         )}
@@ -441,91 +441,91 @@ function CSVUpload() {
           </Typography>
           <List dense>
             <ListItem>
-              <ListItemIcon><CheckCircleIcon color="success" /></ListItemIcon>
+              <ListItemIcon><CheckCircleIcon sx={{ color: '#1e3a5f' }} /></ListItemIcon>
               <ListItemText 
                 primary="tender_id" 
                 secondary="案件ID（必須）" 
               />
             </ListItem>
             <ListItem>
-              <ListItemIcon><CheckCircleIcon color="success" /></ListItemIcon>
+              <ListItemIcon><CheckCircleIcon sx={{ color: '#1e3a5f' }} /></ListItemIcon>
               <ListItemText 
                 primary="project_name" 
                 secondary="工事名（必須）" 
               />
             </ListItem>
             <ListItem>
-              <ListItemIcon><CheckCircleIcon color="success" /></ListItemIcon>
+              <ListItemIcon><CheckCircleIcon sx={{ color: '#1e3a5f' }} /></ListItemIcon>
               <ListItemText 
                 primary="publisher" 
                 secondary="発注者（必須）" 
               />
             </ListItem>
             <ListItem>
-              <ListItemIcon><CheckCircleIcon color="success" /></ListItemIcon>
+              <ListItemIcon><CheckCircleIcon sx={{ color: '#1e3a5f' }} /></ListItemIcon>
               <ListItemText 
                 primary="prefecture" 
                 secondary="都道府県（必須）" 
               />
             </ListItem>
             <ListItem>
-              <ListItemIcon><CheckCircleIcon color="success" /></ListItemIcon>
+              <ListItemIcon><CheckCircleIcon sx={{ color: '#1e3a5f' }} /></ListItemIcon>
               <ListItemText 
                 primary="municipality" 
                 secondary="市区町村（必須）" 
               />
             </ListItem>
             <ListItem>
-              <ListItemIcon><CheckCircleIcon color="success" /></ListItemIcon>
+              <ListItemIcon><CheckCircleIcon sx={{ color: '#1e3a5f' }} /></ListItemIcon>
               <ListItemText 
                 primary="use_type" 
                 secondary="用途種別（必須）例：学校、庁舎、文化施設" 
               />
             </ListItem>
             <ListItem>
-              <ListItemIcon><CheckCircleIcon color="success" /></ListItemIcon>
+              <ListItemIcon><CheckCircleIcon sx={{ color: '#1e3a5f' }} /></ListItemIcon>
               <ListItemText 
                 primary="method" 
                 secondary="入札方式（必須）例：一般競争入札、総合評価方式" 
               />
             </ListItem>
             <ListItem>
-              <ListItemIcon><CheckCircleIcon color="success" /></ListItemIcon>
+              <ListItemIcon><CheckCircleIcon sx={{ color: '#1e3a5f' }} /></ListItemIcon>
               <ListItemText 
                 primary="floor_area_m2" 
                 secondary="延床面積（㎡）（必須）" 
               />
             </ListItem>
             <ListItem>
-              <ListItemIcon><CheckCircleIcon color="success" /></ListItemIcon>
+              <ListItemIcon><CheckCircleIcon sx={{ color: '#1e3a5f' }} /></ListItemIcon>
               <ListItemText 
                 primary="award_date" 
                 secondary="落札日（必須）形式：YYYY-MM-DD" 
               />
             </ListItem>
             <ListItem>
-              <ListItemIcon><CheckCircleIcon color="success" /></ListItemIcon>
+              <ListItemIcon><CheckCircleIcon sx={{ color: '#1e3a5f' }} /></ListItemIcon>
               <ListItemText 
                 primary="award_amount_jpy" 
                 secondary="落札額（円）（必須）" 
               />
             </ListItem>
             <ListItem>
-              <ListItemIcon><CheckCircleIcon color="success" /></ListItemIcon>
+              <ListItemIcon><CheckCircleIcon sx={{ color: '#1e3a5f' }} /></ListItemIcon>
               <ListItemText 
                 primary="estimated_price_jpy" 
                 secondary="予定価格（円）（必須）" 
               />
             </ListItem>
             <ListItem>
-              <ListItemIcon><CheckCircleIcon color="success" /></ListItemIcon>
+              <ListItemIcon><CheckCircleIcon sx={{ color: '#1e3a5f' }} /></ListItemIcon>
               <ListItemText 
                 primary="win_rate" 
                 secondary="落札率（%）（必須）" 
               />
             </ListItem>
             <ListItem>
-              <ListItemIcon><CheckCircleIcon color="success" /></ListItemIcon>
+              <ListItemIcon><CheckCircleIcon sx={{ color: '#1e3a5f' }} /></ListItemIcon>
               <ListItemText 
                 primary="participants_count" 
                 secondary="参加社数（必須）" 

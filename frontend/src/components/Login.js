@@ -110,7 +110,7 @@ function Login({ onLogin }) {
         >
           {/* ロゴエリア */}
           <Box sx={{ textAlign: 'center', mb: { xs: 4, md: 6 } }}>
-            <BiGlasses style={{ fontSize: 48, color: '#1b5e20', marginBottom: 16 }} />
+            <BiGlasses style={{ fontSize: 48, color: '#1e3a5f', marginBottom: 16 }} />
             <Typography
               variant="h3"
               sx={{
@@ -207,9 +207,9 @@ function Login({ onLogin }) {
                 fontSize: { xs: '0.9rem', md: '1rem' },
                 fontWeight: 200,
                 letterSpacing: '0.02em',
-                backgroundColor: '#1b5e20',
+                backgroundColor: '#1e3a5f',
                 '&:hover': {
-                  backgroundColor: '#2e7d32',
+                  backgroundColor: '#15304d',
                 },
               }}
             >
@@ -243,11 +243,11 @@ function Login({ onLogin }) {
                   py: { xs: 1, md: 1.5 },
                   fontSize: { xs: '0.85rem', md: '1rem' },
                   fontWeight: 200,
-                  borderColor: '#1b5e20',
-                  color: '#1b5e20',
+                  borderColor: '#1e3a5f',
+                  color: '#1e3a5f',
                   '&:hover': {
-                    borderColor: '#2e7d32',
-                    backgroundColor: 'rgba(27, 94, 32, 0.04)',
+                    borderColor: '#15304d',
+                    backgroundColor: 'rgba(30, 58, 95, 0.04)',
                   },
                 }}
               >
